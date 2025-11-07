@@ -73,48 +73,19 @@ var PERSIAN_EPOCH = 1948320.5;
 //  PERSIAN_TO_JD  --  Determine Julian day from Persian date
 
 function persian_to_jd(year, month, day) {
-	var epbase, epyear;
-
-	epbase = year - ((year >= 0) ? 474 : 473);
-	epyear = 474 + mod(epbase, 2820);
-
-	return day +
-		((month <= 7) ?
-			((month - 1) * 31) :
-			(((month - 1) * 30) + 6)
-			) +
-		Math.floor(((epyear * 682) - 110) / 2816) +
-		(epyear - 1) * 365 +
-		Math.floor(epbase / 2820) * 1029983 +
-		(PERSIAN_EPOCH - 1);
+    return -1+day +
+	       ((month<=7) ? 31*(month-1) : 30*(month-1)+6) +
+	       PERSIAN_EPOCH-1 + 365*(year-1) + Math.floor((8*year+21)/33);
 }
 
 //  JD_TO_PERSIAN  --  Calculate Persian date from Julian day
 
 function jd_to_persian(jd) {
-	var year, month, day, depoch, cycle, cyear, ycycle,
-		aux1, aux2, yday;
-
-
-	jd = Math.floor(jd) + 0.5;
-
-	depoch = jd - persian_to_jd(475, 1, 1);
-	cycle = Math.floor(depoch / 1029983);
-	cyear = mod(depoch, 1029983);
-	if (cyear == 1029982) {
-		ycycle = 2820;
-	} else {
-		aux1 = Math.floor(cyear / 366);
-		aux2 = mod(cyear, 366);
-		ycycle = Math.floor(((2134 * aux1) + (2816 * aux2) + 2815) / 1028522) +
-			aux1 + 1;
-	}
-	year = ycycle + (2820 * cycle) + 474;
-	if (year <= 0) {
-		year--;
-	}
-	yday = (jd - persian_to_jd(year, 1, 1)) + 1;
-	month = (yday <= 186) ? Math.ceil(yday / 31) : Math.ceil((yday - 6) / 30);
-	day = (jd - persian_to_jd(year, month, 1)) + 1;
-	return [year, month, day];
+    const divCeil = (a,b) => Math.floor((a+b-1)/b);
+    const since   = jd - persian_to_jd(1, 1, 1);
+    const y       = 1 + Math.floor((33*since+3)/12053);
+    const days    = jd - persian_to_jd(y, 1, 1) + 1;
+    const m       = (days <= 186) ? divCeil(days, 31) : divCeil(days - 6, 30);
+    const d       = jd - persian_to_jd(y, m, 1) + 1;
+    return [y, m, d];
 }
